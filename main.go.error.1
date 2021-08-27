@@ -1,0 +1,14 @@
+package main
+
+import (
+	"fmt"
+	"io/ioutil"
+)
+
+func main(){
+	dir, err := ioutil.TempDir("","temp")
+
+	if err != nil{
+		fmt.Errorf("failed to create temp dir: %v",err)
+	}
+}

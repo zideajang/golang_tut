@@ -1,0 +1,17 @@
+package main
+
+import "fmt"
+
+func main(){
+	// fmt.Println("hello world")
+	// var name = "machine learning golang"
+	// var name string = "machine leanring golang"
+	// var user_id uint = 1000
+	// fmt.Println(name)
+
+
+	//Assignment
+	// var number = 20 // 100000, 12.5
+	number := 16
+	fmt.Printf("%T",number) //int
+}

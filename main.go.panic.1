@@ -1,0 +1,12 @@
+package main
+
+import "fmt"
+
+func main(){
+	divide(5)
+}
+
+func divide(x int){
+	fmt.Printf("divide(%d)\n",x+0/x)
+	divide(x-1)
+}

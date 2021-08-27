@@ -1,0 +1,14 @@
+package main
+
+import "fmt"
+
+func main()  {
+	// str := "hello"
+	// fmt.Printf("%T",str)
+
+	// isComplete := True
+	var number uint64
+	var isComplete bool 
+	fmt.Println(number,isComplete) //0 false
+	
+}
