@@ -1,4 +1,4 @@
- 并发(concurrency) 更多的是一种设计(design) 
+ 
 
 
 
@@ -8,6 +8,12 @@
 - Each process is bult for sequential execution
 - Data is communicated between processes via channels No shared state
 - Scale by adding more of the same
+
+
+
+
+
+> 并发(concurrency) 更多的是一种设计(design) 
 
 
 
@@ -23,7 +29,7 @@
 
 
 
-
+channel 主要是用于在不同 goroutines 间传递数据的，所以想要谈 channel 就少不了 go routines ，可以通过 select 实现对 channel 的控制，从语言层面来说 select 语句时必不可少的
 
 
 
@@ -35,6 +41,55 @@ channel 可以看做 Goroutines 间用来通信的管道，在 go 语言中，�
 
 
 
+#### channel 的类型
+
+There are two basic types of channels: buffered channels and unbuffered channels. The above example illustrates the behaviour of unbuffered channels. Let’s quickly see the definition of these:
+
+有两种基本类型的 channel：**buffered channels(缓冲通道)**和**unbuffered channels(非缓冲通道)**,上面的例子说明了非缓冲通道的行为。让我们快速看看这些的定义。
+
+
+
+**unbffered channe(无缓冲通道)**:  这就是我们在上面看到的东西。channel 只能够容纳一份数据，在向 channel 追加新的数据前，需要先先将原有数据进行消费(读取)，不然就会造成阻塞。
+
+
+
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main(){
+	messages := make(chan string)
+
+	go func(){
+		messages <- "ping"
+		fmt.Println("ping sent")
+		
+		messages <- "pong"
+		fmt.Println("pong sent")
+		
+	}()
+
+	fmt.Println(<-messages)
+	time.Sleep(time.Second * 3)
+	fmt.Println(<-messages)
+}
+```
+
+
+
+
+
+**Buffered channel(缓冲通道)**: 在一个 buffered channel 中，创建一个 Buffered channel 与创建一个 unbffered channe 并没有什么大区别，只是在需要给出通道的容量值。如·` c := make(chan int,10)`  make函数的第二个参数是通道的容量。表示创建了一个通道中最多放入 10 个元素的通道。当容量已满，该通道就会被阻塞。
+
+
+
+
+
 #### 如何创建 channel
 
 在定义 channel 时需要给出一个类型，和 cpp 的指针有点类似，估计都是开辟一块内存，为 channel 指定了类型之后，该 channel 就只能接受指定类型的数据，不能接受其他类型的数据，在输出通道类型时就是就是你指定类型
@@ -43,7 +98,7 @@ Channel 的初始值是 `nil`。`nil` 通道没有任何用处，需要用 `make
 
 
 
-> make 这函数是一个内建函数，其第一个参数是类型，第二个参数是长度。Go 语言中初始化一个结构时会用到 make 和 new 都是初始化一个结构体，返回一个结构体的指针，但是 make 要相对 new 要复杂一些
+> make 这函数是一个内建函数，定义时需要指定类型以便分配一定空间的内存。Go 语言中初始化一个结构时会用到 make 和 new 都是初始化一个结构体，返回一个结构体的指针，但是 make 要相对 new 要复杂一些
 
 ```go
 package main
@@ -69,6 +124,18 @@ Type of a is chan int
 
 
 
+#### channel 的属性
+
+在 channel 内部做许多事情，接下来一一将其列举
+
+- channel 是 goroutine-safe
+- channel 可以在 goroutine 间传递数据
+- channel 提供 FIFO 队列
+
+  
+
+
+
 #### 通过 channel 发送和接受数据
 
 ```go
@@ -82,14 +149,31 @@ a <- data // write to channel a
 
 
 
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main()  {
+	message := make(chan string)
+	go func(){
+		time.Sleep(time.Second * 5)
+		message <- "ping"
+	}()
+	msg := <-message
+	fmt.Println(msg)
+}
+```
+
+
+
+
+
 #### 发送和接收默认为阻塞
 channel 的发送和接收默认是阻塞的，这意味着什么？当数据被发送到一个 channel 时，控制在发送语句中被阻断，直到其他 Goroutine从该通道读取。同样地，当数据从一个 channel 中读出时，读被阻塞，直到某个 Goroutine 将数据写到该  channel。也就是创建好一个通道，无论是先写入还是先读取通道都会让发送和接受(写入和读取)的所在 Goroutine 发生阻塞。
-
-
-
-This property of channels is what helps Goroutines communicate effectively without the use of explicit locks or conditional variables that are quite common in other programming languages.
-
-channel 的这一属性有助于 Goroutine 有效地进行通信，而无需使用显式锁或条件变量，这在其他编程语言中是很常见的。
 
 
 
@@ -229,6 +313,74 @@ Received  9 true
 `for range`形式的`for`循环可以用来从一个通道接收数值，直到它被关闭。
 
 让我们用for range循环重写上面的程序。
+
+
+
+### Select 语句控制 channel
+
+```go
+package main
+
+import "fmt"
+
+
+
+func main(){
+	messages := make(chan string)
+	signals := make(chan bool)
+
+	select{
+	case msg := <- messages:
+		fmt.Println("received message",msg)
+	default:
+		fmt.Println("no message received")
+	}
+
+	msg := "hi"
+	select{
+	case messages <- msg:
+		fmt.Println("send message",msg)
+	default:
+		fmt.Println("no message sent")
+	}
+
+	select{
+	case msg := <- messages:
+		fmt.Println("received message",msg)
+	case sig := <- signals:
+		fmt.Println("received signal",sig)
+	default:
+		fmt.Println("no activity")
+	}
+}
+```
+
+
+
+- 这里有一个非阻塞的接收，如果在 messages 通道上有可用的值，那么`select`将执行 <-messages case 里语句。如果 messages 中没有可用的值，将走到 default case 执行其中语句。
+
+- 非阻塞性发送的工作原理与非阻塞接受工作类似，因为 messages 不是缓存通道，而且通道中没有接收器，所以会走默认语句输出。
+
+  
+
+```go
+no message received
+no message sent
+no activity
+```
+
+
+
+- 除 default 外，如果只有一个 case 语句评估通过，那么就执行这个case里的语句；
+- 除 default 外，如果有多个 case 语句评估通过，那么通过伪随机的方式随机选一个；
+- 如果 default 外的 case 语句都没有通过评估，那么执行 default 里的语句；
+- 如果没有 default，那么 代码块会被阻塞，指导有一个 case 通过评估；否则一直阻塞
+
+
+
+
+
+<hr/>
 
 
 

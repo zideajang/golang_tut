@@ -1,0 +1,37 @@
+package main
+
+import "fmt"
+
+func main(){
+	messages := make(chan string)
+	// go func(){
+	// 	fmt.Println("msg")
+	// 	msg := <- messages
+	// 	fmt.Println(msg)
+	// }()
+	// msg := <- messages
+	// fmt.Println(msg)
+	// msg := "hello"
+	// messages <- msg
+
+	select{
+	case msg := <- messages:
+		fmt.Println("received messge",msg)
+	default:
+		fmt.Println("no message recieved")
+	}
+
+
+	msg := "hello"
+
+	select{
+	case messages <- msg:
+		fmt.Println("send message",msg)
+	default:
+		fmt.Println("no message sent")
+	}
+
+
+
+	fmt.Println("main function finish")
+}

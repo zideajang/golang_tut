@@ -1,0 +1,23 @@
+package main
+
+import (
+	"fmt"
+	"time"
+)
+
+func main(){
+	messages := make(chan string)
+
+	go func(){
+		messages <- "ping"
+		fmt.Println("ping sent")
+		
+		messages <- "pong"
+		fmt.Println("pong sent")
+		
+	}()
+
+	fmt.Println(<-messages)
+	time.Sleep(time.Second * 3)
+	fmt.Println(<-messages)
+}
